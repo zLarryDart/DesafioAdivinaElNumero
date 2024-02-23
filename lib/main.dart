@@ -86,8 +86,33 @@ class _HomePageState extends State<HomePage> {
               SizedBox(height: 10.0),
               ElevatedButton(
                 onPressed: () {
-                  _checkGuess(int.tryParse(_controller.text) ?? 0);
-                  _controller.clear();
+                  // Verifica si el campo de texto está vacío
+                  if (_controller.text.isEmpty) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('Por favor, introduce un número'),
+                        duration: Duration(seconds: 2),
+                      ),
+                    );
+                  } else {
+                    // Intenta convertir el texto a número. Si falla, muestra un SnackBar
+                    final number = int.tryParse(_controller.text);
+                    if (number == null) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(
+                              'Lo siento, solo se permiten números. Inténtalo de nuevo.'),
+                          backgroundColor:
+                              number == null ? Colors.red : Colors.green,
+                          duration: Duration(seconds: 4),
+                        ),
+                      );
+                    } else {
+                      // Si el texto es un número válido, continúa con la lógica de verificación
+                      _checkGuess(number);
+                      _controller.clear();
+                    }
+                  }
                 },
                 child: Text('Validar'),
               ),
@@ -180,7 +205,24 @@ class _HomePageState extends State<HomePage> {
           ),
         ),
       ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: _resetCompleteGame,
+        child: Icon(Icons.restart_alt),
+        focusColor: Colors.white,
+        backgroundColor: Color.fromARGB(255, 103, 87, 223),
+      ),
     );
+  }
+
+  void _resetCompleteGame() {
+    setState(() {
+      _gameLogic.setDifficulty(Difficulty.values[
+          _currentDifficultyIndex]); // Asegura que se reinicie con la dificultad actual
+      _gameLogic.newGame();
+      _controller.clear(); // Limpia el campo de texto
+      _guesses.clear(); // Limpia el historial de intentos fallidos
+      _hint = ''; // Limpia cualquier pista mostrada
+    });
   }
 
   void _checkGuess(int guess) {
